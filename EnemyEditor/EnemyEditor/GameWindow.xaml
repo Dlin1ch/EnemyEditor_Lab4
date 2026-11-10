@@ -1,0 +1,69 @@
+﻿<Window x:Class="EnemyEditor.GameWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:EnemyEditor"
+        mc:Ignorable="d"
+        Title="Clicker" Height="400" Width="700">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="200"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ЛЕВАЯ КОЛОНКА -->
+        <StackPanel Grid.Column="0" Margin="15">
+            <Label Content="Enemy name:" FontWeight="Bold"/>
+            <TextBlock x:Name="EnemyNameText" FontSize="16" Margin="0,5,0,15"/>
+
+            <Label Content="Enemy hit point:" FontWeight="Bold"/>
+            <TextBlock x:Name="EnemyHPText" FontSize="16" Margin="0,5,0,15"/>
+
+            <Label Content="Gold from enemy:" FontWeight="Bold"/>
+            <TextBlock x:Name="EnemyGoldText" FontSize="16" Margin="0,5,0,15"/>
+        </StackPanel>
+
+        <!-- ЦЕНТРАЛЬНАЯ КОЛОНКА -->
+        <Grid Grid.Column="1" Margin="15">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="60"/>
+            </Grid.RowDefinitions>
+
+            <!-- Сцена, где сидит противник и появляются сферы -->
+            <Canvas x:Name="GameScene" Background="#FFF0F0F0" ClipToBounds="True" MouseDown="GameScene_MouseDown" Grid.Row="0">
+                <!-- Кнопка с противником -->
+                <Button x:Name="EnemyButton" Width="215" Height="150" Click="EnemyButton_Click" Canvas.Left="33" Canvas.Top="50" HorizontalAlignment="Left" VerticalAlignment="Center">
+                    <Image x:Name="EnemyImage" Stretch="Uniform"/>
+                </Button>
+            </Canvas>
+
+            <!-- Индикатор перезарядки -->
+            <ProgressBar x:Name="CooldownBar" Height="20" Margin="0,10,0,0" Grid.Row="1" Minimum="0" Maximum="1" Value="1"/>
+        </Grid>
+
+        <!-- ПРАВАЯ КОЛОНКА -->
+        <StackPanel Grid.Column="2" Margin="15">
+            <Label Content="Level:" FontWeight="Bold"/>
+            <TextBlock x:Name="LevelText" FontSize="16" Margin="0,5,0,15"/>
+
+            <Label Content="Player's gold:" FontWeight="Bold"/>
+            <TextBlock x:Name="GoldText" FontSize="16" Margin="0,5,0,15"/>
+
+            <Label Content="Player's damage:" FontWeight="Bold"/>
+            <TextBlock x:Name="DamageText" FontSize="16" Margin="0,5,0,15"/>
+
+            <Button x:Name="UpgradeButton" Content="Upgrade Damage" Height="40" Margin="0,10,0,0" Click="UpgradeButton_Click"/>
+
+            <Button x:Name="UpgradeCooldownButton" Content="Upgrade Cooldown" Height="40" Margin="0,10,0,0" Click="UpgradeCooldownButton_Click"/>
+
+            <Label Content="Стоимость апгрейда урона:" FontWeight="Bold" Margin="0,15,0,0"/>
+            <TextBlock x:Name="UpgradeCostText" FontSize="14"/>
+
+            <Label Content="Стоимость апгрейда перезарядки:" FontWeight="Bold" Margin="0,5,0,0"/>
+            <TextBlock x:Name="UpgradeCooldownCostText" FontSize="14"/>
+        </StackPanel>
+    </Grid>
+</Window>
