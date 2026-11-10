@@ -8,111 +8,63 @@ namespace EnemyEditor
 {
     public class CEnemyTemplateList
     {
-        // Приватный список противников
-        [JsonInclude]
+        [System.Text.Json.Serialization.JsonInclude]
         private List<CEnemyTemplate> enemies;
 
-        // Конструктор — создаёт пустой список
+        // Используем интерфейс для сохранения/загрузки
+        private readonly ISaveList<List<CEnemyTemplate>> _serializer;
+
         public CEnemyTemplateList()
         {
             enemies = new List<CEnemyTemplate>();
+            _serializer = new JsonEnemySaver(); // Создаем реализацию интерфейса
         }
 
-        // Добавление нового противника
-        public void AddEnemy(string name, string iconName, int baseLife,
-            double lifeModifier, int baseGold,
-            double goldModifier, double spawnChance)
+        // Добавление уже готового объекта (обычного, бронированного или лечащегося)
+        public void AddEnemy(CEnemyTemplate enemy)
         {
-            CEnemyTemplate enemy = new CEnemyTemplate(name, iconName, baseLife,
-                lifeModifier, baseGold, goldModifier, spawnChance);
             enemies.Add(enemy);
         }
 
-        // Получить противника по имени
         public CEnemyTemplate? GetEnemyByName(string name)
         {
-            foreach (CEnemyTemplate enemy in enemies)
-            {
-                if (enemy.Name == name)
-                {
-                    return enemy;
-                }
-            }
-            return null;
+            return enemies.Find(e => e.Name == name);
         }
 
-        // Получить противника по индексу
         public CEnemyTemplate? GetEnemyByIndex(int id)
         {
-            if (id >= 0 && id < enemies.Count)
-            {
-                return enemies[id];
-            }
-            return null;
+            return (id >= 0 && id < enemies.Count) ? enemies[id] : null;
         }
 
-        // Удалить противника по имени
-        public void DeleteEnemyByName(string name)
-        {
-            CEnemyTemplate? enemy = GetEnemyByName(name);
-            if (enemy != null)
-            {
-                enemies.Remove(enemy);
-            }
-        }
-
-        // Удалить противника по индексу
         public void DeleteEnemyByIndex(int id)
         {
-            if (id >= 0 && id < enemies.Count)
-            {
-                enemies.RemoveAt(id);
-            }
+            if (id >= 0 && id < enemies.Count) enemies.RemoveAt(id);
         }
 
-        // Получить список имён всех противников
         public List<string> GetListOfEnemyNames()
         {
-            List<string> names = new List<string>();
-            foreach (CEnemyTemplate enemy in enemies)
-            {
-                names.Add(enemy.Name);
-            }
-            return names;
+            return enemies.ConvertAll(e => e.Name);
         }
 
-        // Сохранить список в JSON-файл
+        public int Count
+        {
+            get { return enemies.Count; }
+        }
+
+        // Сохранение и загрузка через интерфейс (полиморфизм!)
         public void SaveToJson(string path)
         {
-            string jsonString = JsonSerializer.Serialize(enemies);
-            File.WriteAllText(path, jsonString);
+            _serializer.Save(enemies, path);
         }
 
-        // Загрузить список из JSON-файла
         public void LoadFromJson(string path)
         {
-            string jsonFromFile = File.ReadAllText(path);
+            // 1. Загружаем список из файла
+            List<CEnemyTemplate> loadedEnemies = _serializer.Load(path);
 
-            // Очищаем текущий список
-            enemies.Clear();
-
-            // Парсим JSON
-            JsonDocument doc = JsonDocument.Parse(jsonFromFile);
-
-            // Перебираем все элементы массива
-            foreach (JsonElement element in doc.RootElement.EnumerateArray())
+            // 2. Добавляем каждого загруженного врага в текущий список
+            foreach (CEnemyTemplate enemy in loadedEnemies)
             {
-                string name = element.GetProperty("Name").GetString() ?? "";
-                string iconName = element.GetProperty("IconName").GetString() ?? "";
-                int baseLife = element.GetProperty("BaseLife").GetInt32();
-                double lifeModifier = element.GetProperty("LifeModifier").GetDouble();
-                int baseGold = element.GetProperty("BaseGold").GetInt32();
-                double goldModifier = element.GetProperty("GoldModifier").GetDouble();
-                double spawnChance = element.GetProperty("SpawnChance").GetDouble();
-
-                // Создаём нового противника через конструктор
-                CEnemyTemplate enemy = new CEnemyTemplate(name, iconName, baseLife,
-                    lifeModifier, baseGold, goldModifier, spawnChance);
                 enemies.Add(enemy);
             }
         }

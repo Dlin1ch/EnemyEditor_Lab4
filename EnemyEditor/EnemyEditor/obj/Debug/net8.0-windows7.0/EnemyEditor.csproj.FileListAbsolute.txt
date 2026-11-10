@@ -15,6 +15,7 @@ C:\Users\User\source\repos\Dlin1ch\EnemyEditor_Lab4\EnemyEditor\EnemyEditor\obj\
 C:\Users\User\source\repos\Dlin1ch\EnemyEditor_Lab4\EnemyEditor\EnemyEditor\obj\Debug\net8.0-windows7.0\EnemyEditor.AssemblyInfoInputs.cache
 C:\Users\User\source\repos\Dlin1ch\EnemyEditor_Lab4\EnemyEditor\EnemyEditor\obj\Debug\net8.0-windows7.0\EnemyEditor.AssemblyInfo.cs
 C:\Users\User\source\repos\Dlin1ch\EnemyEditor_Lab4\EnemyEditor\EnemyEditor\obj\Debug\net8.0-windows7.0\EnemyEditor.csproj.CoreCompileInputs.cache
+C:\Users\User\source\repos\Dlin1ch\EnemyEditor_Lab4\EnemyEditor\EnemyEditor\obj\Debug\net8.0-windows7.0\EnemyEditor.sourcelink.json
 C:\Users\User\source\repos\Dlin1ch\EnemyEditor_Lab4\EnemyEditor\EnemyEditor\obj\Debug\net8.0-windows7.0\EnemyEditor.dll
 C:\Users\User\source\repos\Dlin1ch\EnemyEditor_Lab4\EnemyEditor\EnemyEditor\obj\Debug\net8.0-windows7.0\refint\EnemyEditor.dll
 C:\Users\User\source\repos\Dlin1ch\EnemyEditor_Lab4\EnemyEditor\EnemyEditor\obj\Debug\net8.0-windows7.0\EnemyEditor.pdb
