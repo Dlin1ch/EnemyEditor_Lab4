@@ -56,25 +56,24 @@ namespace EnemyEditor
             for (int i = 0; i < templates.Count; i++)
                 sum += templates[i].SpawnChance;
 
-            if (sum == 0)
-            {
-                double equalChance = 1.0 / templates.Count;
-                for (int i = 0; i < templates.Count; i++)
-                {
-                    // ИСПОЛЬЗУЕМ ОБЫЧНЫЙ ШАБЛОН ВМЕСТО АБСТРАКТНОГО
-                    templates[i] = new CNormalEnemyTemplate(
-                        templates[i].Name, templates[i].IconName, templates[i].BaseLife,
-                        templates[i].LifeModifier, templates[i].BaseGold, templates[i].GoldModifier, equalChance);
-                }
-                return;
-            }
-
             for (int i = 0; i < templates.Count; i++)
             {
-                double normalizedChance = templates[i].SpawnChance / sum;
-                templates[i] = new CNormalEnemyTemplate(
-                    templates[i].Name, templates[i].IconName, templates[i].BaseLife,
-                    templates[i].LifeModifier, templates[i].BaseGold, templates[i].GoldModifier, normalizedChance);
+                // Если сумма шансов 0, ставим равные, иначе делим на сумму
+                double normalizedChance = (sum == 0) ? (1.0 / templates.Count) : (templates[i].SpawnChance / sum);
+
+                // ВАЖНО: Копируем объект, сохраняя его тип!
+                if (templates[i] is CArmoredEnemyTemplate armored)
+                {
+                    templates[i] = new CArmoredEnemyTemplate(armored.Name, armored.IconName, armored.BaseLife, armored.LifeModifier, armored.BaseGold, armored.GoldModifier, normalizedChance, armored.Armor);
+                }
+                else if (templates[i] is CHealingEnemyTemplate healing)
+                {
+                    templates[i] = new CHealingEnemyTemplate(healing.Name, healing.IconName, healing.BaseLife, healing.LifeModifier, healing.BaseGold, healing.GoldModifier, normalizedChance, healing.HealChance);
+                }
+                else
+                {
+                    templates[i] = new CNormalEnemyTemplate(templates[i].Name, templates[i].IconName, templates[i].BaseLife, templates[i].LifeModifier, templates[i].BaseGold, templates[i].GoldModifier, normalizedChance);
+                }
             }
         }
 
@@ -94,7 +93,7 @@ namespace EnemyEditor
             return templates[templates.Count - 1];
         }
 
-        public Enemy CreateEnemy(CEnemyTemplate template, int playerLevel)
+        public IEnemy CreateEnemy(CEnemyTemplate template, int playerLevel)
         {
             BigNumber maxHP = new BigNumber(template.BaseLife.ToString());
             maxHP = maxHP * template.LifeModifier;
@@ -104,7 +103,19 @@ namespace EnemyEditor
             gold = gold * template.GoldModifier;
             gold = gold * playerLevel;
 
-            return new Enemy(template.Name, maxHP, gold, template.IconName);
+            // Проверяем реальный тип шаблона и создаем нужного врага
+            if (template is CArmoredEnemyTemplate armoredTemplate)
+            {
+                return EnemyFactory.CreateEnemy("CArmoredEnemy", template.Name, template.IconName, maxHP, gold, armoredTemplate.Armor);
+            }
+            else if (template is CHealingEnemyTemplate)
+            {
+                return EnemyFactory.CreateEnemy("CNormalEnemy", template.Name, maxHP, gold);
+            }
+            else
+            {
+                return EnemyFactory.CreateEnemy("CNormalEnemy", template.Name, maxHP, gold);
+            }
         }
 
         public int Count => templates.Count;

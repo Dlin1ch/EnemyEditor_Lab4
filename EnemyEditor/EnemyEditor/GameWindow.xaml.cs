@@ -1,17 +1,9 @@
 ﻿using Clicker;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using System.Windows.Threading;
 
 namespace EnemyEditor
@@ -20,14 +12,18 @@ namespace EnemyEditor
     {
         private EnemyStorage storage;
         private Player player;
-        private Enemy? currentEnemy;
+        private IEnemy? currentEnemy; // ИСПРАВЛЕНО: теперь IEnemy
         private string iconsFolder;
 
-        // Таймер и сферы
+        // Таймер и сферы (из Лабы 3)
         private DispatcherTimer? gameTimer;
         private List<CCollectable> activeSpheres;
         private double spawnTimer = 0;
         private Random rng = new Random();
+
+        // Сохранение игрока
+        private string saveFilePath;
+        private ISaveList<Player> playerSaver;
 
         public GameWindow()
         {
@@ -38,6 +34,9 @@ namespace EnemyEditor
 
             string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             iconsFolder = System.IO.Path.Combine(desktopPath, "ClickerData", "Icons");
+            saveFilePath = System.IO.Path.Combine(desktopPath, "ClickerData", "player_save.json");
+
+            playerSaver = new JsonPlayerSaver();
 
             try
             {
@@ -60,35 +59,26 @@ namespace EnemyEditor
             gameTimer.Start();
         }
 
-        // Закрытие окна (останавливаем таймер)
         private void Window_Closed(object sender, EventArgs e)
         {
             gameTimer?.Stop();
         }
 
-        // Таймер, который тикает каждые 33 мс (обновляет игру)
         private void GameTimer_Tick(object? sender, EventArgs e)
         {
             double delta = 0.033;
 
-            // Обновляем игрока (перезарядка и баффы)
             player.Update(delta);
 
-            // Обновляем индикатор перезарядки
             if (player.CanClick()) CooldownBar.Value = 1;
             else CooldownBar.Value = 0;
 
-            // Обновляем сферы
             UpdateSpheres(delta);
-
-            // Обновляем UI
             UpdateUI();
         }
 
-        // Создание и удаление сфер
         private void UpdateSpheres(double delta)
         {
-            // Удаляем просроченные сферы
             for (int i = activeSpheres.Count - 1; i >= 0; i--)
             {
                 if (activeSpheres[i].updateLifetime(delta))
@@ -98,7 +88,6 @@ namespace EnemyEditor
                 }
             }
 
-            // Спавним новые сферы (раз в 3 секунды)
             spawnTimer += delta;
             if (spawnTimer >= 3.0)
             {
@@ -107,7 +96,6 @@ namespace EnemyEditor
             }
         }
 
-        // Создать бонусную сферу
         private void SpawnSphere()
         {
             double x = rng.NextDouble() * (GameScene.ActualWidth - 40) + 20;
@@ -116,7 +104,6 @@ namespace EnemyEditor
             double lifetime = 3.0;
 
             CCollectable sphere;
-            // 50% на золото, 50% на урон
             if (rng.NextDouble() < 0.5)
                 sphere = new CGoldGiver(new Point(x, y), size, lifetime, player.Lvl);
             else
@@ -126,7 +113,6 @@ namespace EnemyEditor
             GameScene.Children.Add(sphere.getSprite());
         }
 
-        // Клик по сцене (для сбора сфер)
         private void GameScene_MouseDown(object sender, MouseButtonEventArgs e)
         {
             Point mousePos = e.GetPosition(GameScene);
@@ -137,12 +123,11 @@ namespace EnemyEditor
                 {
                     GameScene.Children.Remove(activeSpheres[i].getSprite());
                     activeSpheres.RemoveAt(i);
-                    return; // Собираем только одну сферу за клик
+                    return;
                 }
             }
         }
 
-        // Создать следующего противника
         private void SpawnNextEnemy()
         {
             CEnemyTemplate? template = storage.GetRandomTemplate();
@@ -155,9 +140,9 @@ namespace EnemyEditor
 
             currentEnemy = storage.CreateEnemy(template, player.Lvl);
 
-            string iconPath = System.IO.Path.Combine(iconsFolder, currentEnemy.IconPath);
+            string iconPath = System.IO.Path.Combine(iconsFolder, currentEnemy.IconName);
             if (!System.IO.File.Exists(iconPath))
-                iconPath = System.IO.Path.Combine(iconsFolder, "Monsters", currentEnemy.IconPath);
+                iconPath = System.IO.Path.Combine(iconsFolder, "Monsters", currentEnemy.IconName);
 
             if (System.IO.File.Exists(iconPath))
             {
@@ -174,14 +159,13 @@ namespace EnemyEditor
             }
         }
 
-        // Обновить интерфейс
         private void UpdateUI()
         {
             if (currentEnemy == null) return;
 
             EnemyNameText.Text = currentEnemy.Name;
-            EnemyHPText.Text = currentEnemy.CurrentHitPoints.ToString();
-            EnemyGoldText.Text = currentEnemy.GoldReward.ToString();
+            EnemyHPText.Text = currentEnemy.CurrentLife.ToString(); // ИСПРАВЛЕНО
+            EnemyGoldText.Text = currentEnemy.Gold.ToString(); // ИСПРАВЛЕНО
 
             LevelText.Text = player.Lvl.ToString();
             GoldText.Text = player.Gold.ToString();
@@ -190,29 +174,25 @@ namespace EnemyEditor
             UpgradeCooldownCostText.Text = player.UpgradeCooldownCost.ToString();
         }
 
-        // Клик по противнику
         private void EnemyButton_Click(object sender, RoutedEventArgs e)
         {
             if (currentEnemy == null) return;
-
-            // Проверяем перезарядку
-            if (!player.CanClick()) return; // Если не готов, игнорируем клик
+            if (!player.CanClick()) return;
 
             BigNumber damage = player.DealDamage();
-            bool killed = currentEnemy.TakeDamage(damage, out BigNumber reward);
+            currentEnemy.TakeDamage(damage); // ИСПРАВЛЕНО
 
-            player.ResetClick(); // Сброс перезарядки
+            player.ResetClick();
 
-            if (killed)
+            if (currentEnemy.IsDead()) // ИСПРАВЛЕНО
             {
-                player.AddGold(reward);
+                player.AddGold(currentEnemy.Gold);
                 SpawnNextEnemy();
             }
 
             UpdateUI();
         }
 
-        // Апгрейд урона
         private void UpgradeButton_Click(object sender, RoutedEventArgs e)
         {
             if (player.TryUpgrade()) { }
@@ -220,12 +200,32 @@ namespace EnemyEditor
             UpdateUI();
         }
 
-        // Апгрейд перезарядки
         private void UpgradeCooldownButton_Click(object sender, RoutedEventArgs e)
         {
             if (player.TryUpgradeCooldown()) { }
             else { MessageBox.Show("Не хватает золота!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning); }
             UpdateUI();
+        }
+
+        // Сохранение и загрузка игры
+        private void SaveGameButton_Click(object sender, RoutedEventArgs e)
+        {
+            playerSaver.Save(player, saveFilePath);
+            MessageBox.Show("Игра сохранена!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void LoadGameButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (System.IO.File.Exists(saveFilePath))
+            {
+                player = playerSaver.Load(saveFilePath);
+                UpdateUI();
+                MessageBox.Show("Игра загружена!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            else
+            {
+                MessageBox.Show("Файл сохранения не найден!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
     }
 }

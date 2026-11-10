@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("EnemyEditor")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+05e1978765c5a98497d254c180ea5ba0677b76b7")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+bc185492ef5b97180f7c9ae04f30ef8b2efed55a")]
 [assembly: System.Reflection.AssemblyProductAttribute("EnemyEditor")]
 [assembly: System.Reflection.AssemblyTitleAttribute("EnemyEditor")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
